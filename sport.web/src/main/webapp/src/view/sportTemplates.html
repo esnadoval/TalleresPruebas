@@ -1,0 +1,54 @@
+<script type="text/template" id="sportList">
+    <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <table class="table striped">
+    <thead>
+    <tr>
+		 <th>name</th>
+		 <th>minAge</th>
+		 <th>maxAge</th>
+    <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% _.each(sports, function(sport) { %>
+    <tr>
+		<td><%= htmlEncode(sport.getDisplay('name')) %></td>
+		<td><%= htmlEncode(sport.getDisplay('minAge')) %></td>
+		<td><%= htmlEncode(sport.getDisplay('maxAge')) %></td>
+    <td>
+    <% if(showEdit) {%>
+    <a onclick="Backbone.trigger('<%= componentId %>-sport-edit',{id:<%= sport.id %>}); return false" >Edit</a> |
+	<% } %> 
+	<% if(showDelete) {%>
+    <a onclick="Backbone.trigger('<%= componentId %>-sport-delete',{id:<%= sport.id %>}); return false" >Delete</a> 
+	<% } %>    
+	</td>
+    </tr>
+    <% }); %>
+    </tbody>
+    </table>
+    </div>
+</script>
+
+<script type="text/template" id="sport">
+    <div class="form-group">
+    <form role="form" id="<%= componentId %>-sportForm">
+    <% if(sport.id) {%>
+    <input type="hidden" name="id" value="<%= sport.id %>"/>
+    <% }%>
+		<div class="form-group" >
+		<label for="name">name</label>
+    	<input type="text" class="form-control" id="name" name="name" placeholder="Enter value" value="<%= sport.get('name') %>"/>	
+		</div>
+		<div class="form-group" >
+		<label for="minAge">minAge</label>
+    	<input type="text" class="form-control" id="minAge" name="minAge" placeholder="Enter value" value="<%= sport.get('minAge') %>"/>	
+		</div>
+		<div class="form-group" >
+		<label for="maxAge">maxAge</label>
+    	<input type="text" class="form-control" id="maxAge" name="maxAge" placeholder="Enter value" value="<%= sport.get('maxAge') %>"/>	
+		</div>
+    </form>
+    </div>
+</script> 
