@@ -9,7 +9,7 @@ import co.edu.uniandes.csw.sport.logic.api._ISportLogicService;
 public abstract class _SportMockLogicService implements _ISportLogicService {
 
 	private Long id= new Long(1);
-	protected List<SportDTO> data=new ArrayList<SportDTO>();
+	protected static List<SportDTO> data=new ArrayList<SportDTO>();
 
 	public SportDTO createSport(SportDTO sport){
 		id++;
@@ -22,6 +22,8 @@ public abstract class _SportMockLogicService implements _ISportLogicService {
 	}
 
 	public SportDTO getSport(Long id){
+            System.err.println("asd>"+data.size());
+            
 		for(SportDTO d:data){
 			if(d.getId().equals(id)){
 				return d;
