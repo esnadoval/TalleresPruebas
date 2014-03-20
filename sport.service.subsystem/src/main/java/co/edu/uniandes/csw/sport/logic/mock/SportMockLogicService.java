@@ -4,8 +4,9 @@ import javax.enterprise.inject.Alternative;
 import javax.inject.Singleton;
 
 import co.edu.uniandes.csw.sport.logic.api.ISportLogicService;
+import javax.enterprise.inject.Default;
 
-@Alternative
+@Default
 @Singleton
 public class SportMockLogicService extends _SportMockLogicService implements ISportLogicService {
 	
