@@ -9,8 +9,10 @@ package co.edu.uniandes.sport.service.subsystem.web.test;
 
 import co.edu.uniandes.csw.sport.logic.api.ISportLogicService;
 import co.edu.uniandes.csw.sport.logic.dto.SportDTO;
+import co.edu.uniandes.csw.sport.logic.ejb.SportLogicService;
 import co.edu.uniandes.csw.sport.logic.mock.SportMockLogicService;
 import co.edu.uniandes.csw.sport.persistence.SportPersistence;
+import co.edu.uniandes.csw.sport.persistence.api.ISportPersistence;
 import co.edu.uniandes.csw.sport.persistence.entity.SportEntity;
 import co.edu.uniandes.csw.sport.service.SportService;
 import org.junit.Test;
@@ -43,7 +45,13 @@ public class SportServiceTest {
             war.merge(ShrinkWrap.create(WebArchive.class, "prueba.war")
                     .addPackage(SportService.class.getPackage())
                     .addPackage(ISportLogicService.class.getPackage())
-                    .addPackage(SportMockLogicService.class.getPackage())
+                    .addPackage(SportLogicService.class.getPackage())
+                    .addPackage(ISportPersistence.class.getPackage())
+                    .addPackage(SportPersistence.class.getPackage())
+                    .addPackage(SportDTO.class.getPackage())
+                    .addPackage(SportEntity.class.getPackage())
+                    .addAsResource("META-INF/persistence.xml", "META-INF/persistence.xml")
+                    
 				
             .as(ExplodedImporter.class).importDirectory("src/main/webapp").as(GenericArchive.class));
             return war;
@@ -112,6 +120,7 @@ public class SportServiceTest {
             Client client = Client.create();
             WebResource webResource = client.resource("http://localhost:8181/prueba/webresources/Sport");
             SportDTO newSport = new SportDTO();
+            
             newSport.setName("aaaadel");
             ObjectMapper map = new ObjectMapper();
             String resp = webResource.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(String.class, map.writeValueAsString(newSport));
