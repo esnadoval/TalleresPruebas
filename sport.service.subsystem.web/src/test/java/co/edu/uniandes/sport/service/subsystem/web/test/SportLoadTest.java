@@ -41,7 +41,7 @@ import uk.co.jemos.podam.api.PodamFactoryImpl;
  */
 @RunWith(Arquillian.class)
 public class SportLoadTest {
-
+//CAMBIE ESTE DIRECTORIO A SU INSTALACION DEL GUI DE JMETER
     public static String APACHE_JMETER_GUI_PATH = "C:\\Users\\asistente\\Desktop\\apache-jmeter-2.11";
     
     @Deployment
