@@ -22,6 +22,7 @@ import co.edu.uniandes.csw.sport.persistence.converter._SportConverter;
 import co.edu.uniandes.csw.sport.persistence.entity.SportEntity;
 import java.io.File;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import uk.co.jemos.podam.api.PodamFactory;
 import uk.co.jemos.podam.api.PodamFactoryImpl;
@@ -32,13 +33,13 @@ public class SportPersistenceTest {
     public static final String DEPLOY = "Prueba";
 
     @Deployment
-    public static WebArchive createDeployment() {
+    public static JavaArchive createDeployment() {
      
-        return ShrinkWrap.create(WebArchive.class, DEPLOY + ".war")
+        return ShrinkWrap.create(JavaArchive.class, DEPLOY + ".jar")
                 .addPackage(SportPersistence.class.getPackage())
                 .addPackage(SportEntity.class.getPackage())
                 .addAsResource("META-INF/persistence.xml", "META-INF/persistence.xml")
-                .addAsWebInfResource("META-INF/beans.xml", "beans.xml");
+                .addAsResource("META-INF/beans.xml", "META-INF/beans.xml");
     }
 
     @Inject
@@ -80,7 +81,7 @@ public class SportPersistenceTest {
         PodamFactory factory = new PodamFactoryImpl(); //This will use the default Random Data Provider Strategy
         for (int i = 0; i < 10; i++) {
             SportEntity entity = SportConverter.persistenceDTO2Entity(factory.manufacturePojo(SportDTO.class));
-            entity.setId((long)i);
+            entity.setId((long)0);
             em.persist(entity);
             data.add(entity);
         }
@@ -139,7 +140,7 @@ public class SportPersistenceTest {
         Assert.assertTrue(!fail);
 
     }
-/*
+
     @Test
     public void deleteSportTest() {
         SportEntity entity = data.get(0);
@@ -164,5 +165,5 @@ public class SportPersistenceTest {
         Assert.assertEquals(dto.getMinAge(), resp.getMinAge());
         Assert.assertEquals(dto.getMaxAge(), resp.getMaxAge());
     }
-*/
+
 }
