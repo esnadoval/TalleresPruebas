@@ -20,10 +20,20 @@ import co.edu.uniandes.csw.sport.persistence.api.ISportPersistence;
 import co.edu.uniandes.csw.sport.persistence.converter.SportConverter;
 import co.edu.uniandes.csw.sport.persistence.converter._SportConverter;
 import co.edu.uniandes.csw.sport.persistence.entity.SportEntity;
+import co.edu.uniandes.csw.sport.test.rules.SportTestRule;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.junit.After;
+import org.junit.Rule;
 import uk.co.jemos.podam.api.PodamFactory;
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 
@@ -32,9 +42,14 @@ public class SportPersistenceTest {
 
     public static final String DEPLOY = "Prueba";
 
+    @Rule
+    public SportTestRule rule = new SportTestRule();
+
+    private SportDTO dataSample;
+
     @Deployment
     public static JavaArchive createDeployment() {
-     
+
         return ShrinkWrap.create(JavaArchive.class, DEPLOY + ".jar")
                 .addPackage(SportPersistence.class.getPackage())
                 .addPackage(SportEntity.class.getPackage())
@@ -53,109 +68,121 @@ public class SportPersistenceTest {
 
     @Before
     public void configTest() {
+
         System.out.println("em: " + em);
-        try {
-            utx.begin();
-            clearData();
-            utx.commit();
-            utx.begin();
-            insertData();
-            utx.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            try {
-                utx.rollback();
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
-        }
+
+        clearData();
+
     }
 
     private void clearData() {
+
+        begin();
         em.createQuery("delete from SportEntity").executeUpdate();
+        data.clear();
+        commit();
+
     }
 
+    public void begin() {
+        try {
+            utx.begin();
+        } catch (Exception ex) {
+            Logger.getLogger(SportPersistenceTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void commit() {
+        try {
+            utx.commit();
+        } catch (Exception ex) {
+            Logger.getLogger(SportPersistenceTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     private List<SportEntity> data = new ArrayList<SportEntity>();
 
     private void insertData() {
+        begin();
         PodamFactory factory = new PodamFactoryImpl(); //This will use the default Random Data Provider Strategy
         for (int i = 0; i < 10; i++) {
             SportEntity entity = SportConverter.persistenceDTO2Entity(factory.manufacturePojo(SportDTO.class));
-            entity.setId((long)0);
+            entity.setId((long) 0);
             em.persist(entity);
             data.add(entity);
         }
+        commit();
+
     }
 
     @Test
     public void createSportTest() {
-        PodamFactory factory = new PodamFactoryImpl(); //This will use the default Random Data Provider Strategy
-        boolean fail = false;
-        for (int i = 0; i < 10; i++) {
 
-            SportDTO dto = factory.manufacturePojo(SportDTO.class);
-            dto.setId((long) 0);
-            SportDTO result = sportPersistence.createSport(dto);
-            
-            Assert.assertNotNull(result);
+        SportDTO result = sportPersistence.createSport(dataSample);
 
-            SportEntity entity = em.find(SportEntity.class, result.getId());
-            fail = !(dto.getName().equals(entity.getName()) && dto.getMinAge() ==  entity.getMinAge() &&  dto.getMaxAge() == entity.getMaxAge());
-           
-        }
-        Assert.assertTrue(!fail);
+        SportDTO pdto = SportConverter.entity2PersistenceDTO(em.find(SportEntity.class, result.getId()));
+        Assert.assertNotNull(em.find(SportEntity.class, result.getId()));
+        Assert.assertEquals(result.getName(), pdto.getName());
+        Assert.assertEquals(result.getMinAge(), pdto.getMinAge());
+        Assert.assertEquals(result.getMaxAge(), pdto.getMaxAge());
+
     }
 
     @Test
     public void getSportsTest() {
-
+        insertData();
+               System.out.println("Test with: " + dataSample.getName());
         List<SportDTO> list = sportPersistence.getSports();
         Assert.assertEquals(list.size(), data.size());
         for (SportDTO dto : list) {
             boolean found = false;
+            
             for (SportEntity entity : data) {
+                
                 if (dto.getId() == entity.getId()) {
+                    System.err.println(">>"+dto.getId() +" - "+ entity.getId());
                     found = true;
                 }
             }
-            
+
             Assert.assertTrue(found);
         }
     }
 
     @Test
     public void getSportTest() {
-        boolean fail = false;
-        for (SportEntity sportEntity : data) {
-            SportEntity entity = sportEntity;
-            SportDTO dto = sportPersistence.getSport(entity.getId());
-          if(dto == null){
-              fail = true;
-          }else{
-              fail = !(dto.getName().equals(entity.getName()) && dto.getMinAge() ==  entity.getMinAge() &&  dto.getMaxAge() == entity.getMaxAge());
-          }
-            
-        }
-        
-        Assert.assertTrue(!fail);
+        SportEntity result = SportConverter.persistenceDTO2Entity(dataSample);
+        begin();
+        em.persist(result);
+        commit();
+        SportDTO dto = sportPersistence.getSport(result.getId());
+
+        Assert.assertNotNull(em.find(SportEntity.class, result.getId()));
+        Assert.assertEquals(result.getName(), dto.getName());
+        Assert.assertEquals(result.getMinAge(), dto.getMinAge());
+        Assert.assertEquals(result.getMaxAge(), dto.getMaxAge());
 
     }
 
     @Test
     public void deleteSportTest() {
-        SportEntity entity = data.get(0);
-        sportPersistence.deleteSport(entity.getId());
-        SportEntity deleted = em.find(SportEntity.class, entity.getId());
+        SportEntity result = SportConverter.persistenceDTO2Entity(dataSample);
+        begin();
+        em.persist(result);
+        commit();
+        sportPersistence.deleteSport(result.getId());
+        SportEntity deleted = em.find(SportEntity.class, result.getId());
         Assert.assertNull(deleted);
     }
 
     @Test
     public void updateSportTest() {
-        SportEntity entity = data.get(0);
+        SportEntity entity = SportConverter.persistenceDTO2Entity(dataSample);
+        begin();
+        em.persist(entity);
+        commit();
         PodamFactory factory = new PodamFactoryImpl();
         SportDTO dto = factory.manufacturePojo(SportDTO.class);
         dto.setId(entity.getId());
-      
 
         sportPersistence.updateSport(dto);
 
